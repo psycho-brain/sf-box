@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title-meta">スタイリッシュくじ引き</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Outfit"', '"Noto Sans JP"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style id="custom-user-style">
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body id="app-body" class="h-full bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-x-hidden transition-colors duration-500">
+
+    <div id="bg-layer" class="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-900 -z-10 bg-cover bg-center transition-all duration-700"></div>
+    <div class="absolute inset-0 bg-black/40 -z-10 backdrop-blur-[2px]"></div>
+
+    <header class="w-full px-6 py-4 flex justify-between items-center z-20 backdrop-blur-md bg-slate-900/40 border-b border-white/10">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+                <i class="fa-solid fa-gift text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 id="header-title" class="text-lg md:text-xl font-extrabold tracking-wide text-white drop-shadow">プレミアムくじ引き</h1>
+                <p class="text-xs text-slate-400">運命のアイテムを引き当てよう</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="openHistoryModal()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs md:text-sm font-medium transition flex items-center space-x-2 border border-white/10 shadow-sm">
+                <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                <span class="hidden sm:inline">当選履歴</span>
+            </button>
+            <button onclick="openAdminModal()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs md:text-sm font-medium transition flex items-center space-x-2 border border-white/10 shadow-sm">
+                <i class="fa-solid fa-lock text-purple-400"></i>
+                <span class="hidden sm:inline">管理画面</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-4xl mx-auto w-full z-10">
+        <div class="text-center mb-10 space-y-3">
+            <span id="app-badge" class="px-4 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-widest inline-block shadow-inner">
+                Daily Lucky Draw
+            </span>
+            <h2 id="hero-title" class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                何が当たるかは、引いてからのお楽しみ。
+            </h2>
+            <p id="hero-desc" class="text-slate-300 text-sm md:text-base max-w-md mx-auto">
+                ハイクオリティなアイテムを毎日ゲットしよう。本日のあなたの運勢を試してみませんか？
+            </p>
+        </div>
+
+        <!-- Remaining draws indicator -->
+        <div class="mb-8 px-5 py-2.5 rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-md flex items-center space-x-3 shadow-xl">
+            <div class="flex space-x-1.5" id="draw-dots">
+                <!-- Dynamic dots inserted via JS -->
+            </div>
+            <span class="text-xs md:text-sm font-medium text-slate-300" id="draws-left-text">本日あと 3 回引けます</span>
+        </div>
+
+        <!-- Central Draw Button Area -->
+        <div class="relative group my-4">
+            <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 blur-lg opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <button id="draw-btn" onclick="executeDraw()" class="relative w-48 h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white font-black text-xl md:text-2xl shadow-2xl flex flex-col items-center justify-center space-y-2 border-4 border-white/20 transform active:scale-95 transition-all duration-200 hover:scale-105 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles text-3xl md:text-4xl text-amber-300 animate-bounce"></i>
+                <span class="tracking-widest">クジを引く</span>
+                <span class="text-xs font-normal opacity-80" id="draw-btn-sub">今すぐ挑戦</span>
+            </button>
+        </div>
+    </main>
+
+    <footer class="w-full py-4 text-center text-xs text-slate-500 z-10 border-t border-white/5 bg-slate-950/40">
+        &copy; 2026 Stylish Kujibiki System. All rights reserved. (Midnight auto-reset enabled)
+    </footer>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/15 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative transform scale-95 transition-transform duration-300" id="result-modal-box">
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center shadow-xl border-4 border-slate-900">
+                <i class="fa-solid fa-trophy text-3xl text-white"></i>
+            </div>
+            <div class="pt-8 pb-4">
+                <span class="text-xs uppercase tracking-widest text-amber-400 font-bold bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">Congratulation!</span>
+                <h3 class="text-2xl font-black text-white mt-3 mb-1">当選しました！</h3>
+                <p id="result-dialogue" class="text-xs text-slate-300 italic mb-6">「おめでとうございます！最高の幸運です！」</p>
+                
+                <div class="bg-slate-950/80 border border-white/10 rounded-2xl p-4 mb-6 shadow-inner">
+                    <span class="text-xs text-slate-400 block mb-1">獲得アイテム</span>
+                    <span id="result-item-name" class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-rose-400">伝説のソード</span>
+                </div>
+
+                <button onclick="closeResultModal()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-600/30 transition transform active:scale-95">
+                    受け取る
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/15 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-shield-halved text-purple-400"></i>
+                    <h3 class="text-lg font-bold text-white">管理人認証</h3>
+                </div>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">管理画面へアクセスするにはパスワードを入力してください。</p>
+            <form onsubmit="verifyPassword(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="password-input" placeholder="パスワードを入力" class="w-full px-4 py-3 bg-slate-950 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <div id="password-error" class="text-xs text-rose-400 hidden font-medium">パスワードが正しくありません。</div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-600/30 transition">
+                    認証する
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div id="admin-modal" class="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-6 bg-black/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/15 rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
+            <!-- Admin Header -->
+            <div class="px-6 py-4 bg-slate-950/60 border-b border-white/10 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">管理者ダッシュボード</h3>
+                        <p class="text-xs text-slate-400">システム設定とアイテム管理 (管理人：2名体制対応)</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="saveAdminSettings()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>設定を保存</span>
+                    </button>
+                    <button onclick="location.reload()" class="px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5" title="更新しても継続表示">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span class="hidden sm:inline">更新</span>
+                    </button>
+                    <button onclick="closeAdminModal()" class="p-2 text-slate-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Tabs Navigation -->
+            <div class="flex border-b border-white/10 bg-slate-950/30 px-6 overflow-x-auto">
+                <button onclick="switchAdminTab('items')" id="tab-btn-items" class="py-3 px-4 text-xs md:text-sm font-bold border-b-2 border-purple-500 text-purple-400 whitespace-nowrap transition">アイテム管理</button>
+                <button onclick="switchAdminTab('rules')" id="tab-btn-rules" class="py-3 px-4 text-xs md:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white whitespace-nowrap transition">回数・セリフ設定</button>
+                <button onclick="switchAdminTab('design')" id="tab-btn-design" class="py-3 px-4 text-xs md:text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-white whitespace-nowrap transition">デザイン設定</button>
+            </div>
+
+            <!-- Admin Body Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- TAB 1: Items Management -->
+                <div id="admin-tab-items" class="space-y-6">
+                    <div class="bg-slate-950/50 border border-white/10 rounded-2xl p-4 md:p-6 space-y-4">
+                        <h4 class="text-sm font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-plus text-purple-400"></i>
+                            <span>新規アイテム追加</span>
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" id="new-item-name" placeholder="アイテム名（例: 激レアチケット）" class="px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500">
+                            <input type="number" id="new-item-count" min="1" max="100" value="10" placeholder="個数 (1〜100)" class="px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500">
+                            <button onclick="addNewItem()" class="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs md:text-sm rounded-xl shadow-lg transition">追加する</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-sm font-bold text-white mb-3">登録アイテム一覧 (在庫管理・深夜0時自動更新)</h4>
+                        <div class="bg-slate-950/50 border border-white/10 rounded-2xl overflow-hidden shadow-inner">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-white/10 text-xs text-slate-400 bg-slate-900/50">
+                                            <th class="p-3 md:p-4">アイテム名</th>
+                                            <th class="p-3 md:p-4 w-32">残数 / 最大数 (1〜100)</th>
+                                            <th class="p-3 md:p-4 text-right w-24">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-items-tbody" class="divide-y divide-white/5 text-xs md:text-sm">
+                                        <!-- Dynamic items rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Rules & Dialogue Settings -->
+                <div id="admin-tab-rules" class="space-y-6 hidden">
+                    <div class="bg-slate-950/50 border border-white/10 rounded-2xl p-6 space-y-6">
+                        <div>
+                            <h4 class="text-sm font-bold text-white mb-2 flex items-center space-x-2">
+                                <i class="fa-solid fa-rotate text-purple-400"></i>
+                                <span>1日のクジ引き回数制限</span>
+                            </h4>
+                            <p class="text-xs text-slate-400 mb-3">ユーザーが1日に引ける回数を指定します（デフォルト3回）。</p>
+                            <div class="flex items-center space-x-3">
+                                <input type="number" id="setting-max-draws" min="1" max="10" value="3" class="w-32 px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500">
+                                <span class="text-xs text-slate-300">回 / 日</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <h4 class="text-sm font-bold text-white mb-2 flex items-center space-x-2">
+                                <i class="fa-solid fa-comment-dots text-purple-400"></i>
+                                <span>当選時の一律セリフ設定</span>
+                            </h4>
+                            <p class="text-xs text-slate-400 mb-3">クジ当選時にポップアップで表示されるメッセージを一括変更します。</p>
+                            <textarea id="setting-dialogue" rows="3" class="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white text-xs md:text-sm focus:outline-none focus:border-purple-500" placeholder="おめでとうございます！最高の幸運です！"></textarea>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <h4 class="text-sm font-bold text-white mb-2 flex items-center space-x-2">
+                                <i class="fa-solid fa-bolt text-amber-400"></i>
+                                <span>手動リセット管理</span>
+                            </h4>
+                            <p class="text-xs text-slate-400 mb-3">本日の試行回数制限をすべてのユーザー/端末で即時リセットします。</p>
+                            <button onclick="manualResetDraws()" class="px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl transition">
+                                本日の回数を手動リセット
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Design Settings -->
+                <div id="admin-tab-design" class="space-y-6 hidden">
+                    <div class="bg-slate-950/50 border border-white/10 rounded-2xl p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">タイトル名</label>
+                                <input type="text" id="setting-title" class="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white text-xs md:text-sm focus:outline-none focus:border-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">背景色</label>
+                                <input type="color" id="setting-bg-color" value="#090d16" class="w-full h-11 bg-slate-900 border border-white/10 rounded-xl cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">文字色</label>
+                                <input type="color" id="setting-text-color" value="#f8fafc" class="w-full h-11 bg-slate-900 border border-white/10 rounded-xl cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">クジ引きボタンの色 (グラデーション開始)</label>
+                                <input type="color" id="setting-btn-color" value="#4f46e5" class="w-full h-11 bg-slate-900 border border-white/10 rounded-xl cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-2">背景画像 URL</label>
+                            <input type="text" id="setting-bg-img" placeholder="https://example.com/image.jpg (空欄でデフォルト)" class="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white text-xs md:text-sm focus:outline-none focus:border-purple-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-2">カスタム CSS 拡張</label>
+                            <textarea id="setting-custom-css" rows="4" class="w-full px-4 py-3 bg-slate-900 border border-white/10 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-purple-500" placeholder="/* 追加のCSSスタイルを入力 */"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/15 rounded-3xl max-w-lg w-full h-[80vh] flex flex-col shadow-2xl overflow-hidden relative">
+            <div class="px-6 py-4 bg-slate-950/60 border-b border-white/10 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">当選履歴</h3>
+                        <p class="text-xs text-slate-400">過去に当たったアイテム（ワンクリックで追加可能）</p>
+                    </div>
+                </div>
+                <button onclick="closeHistoryModal()" class="p-2 text-slate-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-3" id="history-list-container">
+                <!-- Dynamic history items -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* 
+           SHA-256 password hash for security (Pass: "days")
+           SHA-256 for "days": 8227096c42a22533bfd3f11d14902d1d07c0882e3a73c15d482aa52673295844
+        */
+        const PASSWORD_HASH = "8227096c42a22533bfd3f11d14902d1d07c0882e3a73c15d482aa52673295844";
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Default State
+        const DEFAULT_ITEMS = [
+            { id: 1, name: "プレミアムギフトカード", count: 10 },
+            { id: 2, name: "ゴールド・メンバーシップ", count: 5 },
+            { id: 3, name: "ラッキーバッジ", count: 25 },
+            { id: 4, name: "特製ステッカーセット", count: 50 },
+            { id: 5, name: "ミステリーボックス", count: 15 }
+        ];
+
+        let appState = {
+            title: "プレミアムくじ引き",
+            maxDraws: 3,
+            dialogue: "おめでとうございます！素晴らしいアイテムを引き当てました！",
+            bgColor: "#090d16",
+            textColor: "#f8fafc",
+            btnColor: "#4f46e5",
+            bgImg: "",
+            customCss: "",
+            items: DEFAULT_ITEMS,
+            history: []
+        };
+
+        // User Daily Draw State key with date check (resets at midnight)
+        function getTodayKey() {
+            const d = new Date();
+            return `kuji_draws_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+        }
+
+        function getUserDraws() {
+            const key = getTodayKey();
+            const val = localStorage.getItem(key);
+            return val !== null ? parseInt(val, 10) : 0;
+        }
+
+        function setUserDraws(count) {
+            const key = getTodayKey();
+            localStorage.setItem(key, count);
+        }
+
+        // Load / Save State from localStorage
+        function loadState() {
+            const saved = localStorage.getItem("kuji_app_state");
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Failed to parse state", e);
+                }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem("kuji_app_state", JSON.stringify(appState));
+            applyDesign();
+        }
+
+        // Apply dynamic design and styles
+        function applyDesign() {
+            document.getElementById("header-title").innerText = appState.title;
+            document.getElementById("page-title-meta").innerText = appState.title;
+            document.getElementById("app-body").style.backgroundColor = appState.bgColor;
+            document.getElementById("app-body").style.color = appState.textColor;
+            
+            const bgLayer = document.getElementById("bg-layer");
+            if (appState.bgImg && appState.bgImg.trim() !== "") {
+                bgLayer.style.backgroundImage = `url('${appState.bgImg}')`;
+            } else {
+                bgLayer.style.backgroundImage = "";
+            }
+
+            const drawBtn = document.getElementById("draw-btn");
+            drawBtn.style.background = `linear-gradient(to bottom right, ${appState.btnColor}, #7c3aed)`;
+
+            document.getElementById("custom-user-style").innerHTML = appState.customCss || "";
+            
+            updateDrawUI();
+        }
+
+        // Update remaining draw UI indicators
+        function updateDrawUI() {
+            const used = getUserDraws();
+            const max = appState.maxDraws || 3;
+            const remaining = Math.max(0, max - used);
+
+            document.getElementById("draws-left-text").innerText = `本日あと ${remaining} 回引けます (最大 ${max} 回)`;
+
+            const dotsContainer = document.getElementById("draw-dots");
+            dotsContainer.innerHTML = "";
+            for (let i = 0; i < max; i++) {
+                const dot = document.createElement("div");
+                dot.className = `w-3 h-3 rounded-full transition-all duration-300 ${i < (max - remaining) ? 'bg-slate-600 scale-90' : 'bg-emerald-400 shadow-md shadow-emerald-400/50 animate-pulse'}`;
+                dotsContainer.appendChild(dot);
+            }
+
+            const drawBtn = document.getElementById("draw-btn");
+            if (remaining <= 0) {
+                drawBtn.disabled = true;
+                drawBtn.classList.add("opacity-50", "cursor-not-allowed");
+                document.getElementById("draw-btn-sub").innerText = "本日の回数終了";
+            } else {
+                drawBtn.disabled = false;
+                drawBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                document.getElementById("draw-btn-sub").innerText = "今すぐ挑戦";
+            }
+        }
+
+        // Execute Draw Logic
+        function executeDraw() {
+            const used = getUserDraws();
+            const max = appState.maxDraws || 3;
+            if (used >= max) {
+                showToast("本日のクジ引き回数はすべて終了しました。明日またお越しください！");
+                return;
+            }
+
+            // Filter available items with count > 0
+            const availableItems = appState.items.filter(item => item.count > 0);
+            if (availableItems.length === 0) {
+                showToast("現在、在庫のあるアイテムがありません。管理者に連絡してください。");
+                return;
+            }
+
+            // Increment used draws
+            setUserDraws(used + 1);
+            updateDrawUI();
+
+            // Pick random item
+            const randomIndex = Math.floor(Math.random() * availableItems.length);
+            const wonItem = availableItems[randomIndex];
+
+            // Decrease count in state
+            const targetItem = appState.items.find(i => i.id === wonItem.id);
+            if (targetItem) {
+                targetItem.count = Math.max(0, targetItem.count - 1);
+            }
+
+            // Add to history
+            if (!appState.history) appState.history = [];
+            appState.history.unshift({
+                name: wonItem.name,
+                date: new Date().toLocaleString()
+            });
+
+            saveState();
+
+            // Show Result Modal
+            document.getElementById("result-dialogue").innerText = `「${appState.dialogue}」`;
+            document.getElementById("result-item-name").innerText = wonItem.name;
+            
+            const modal = document.getElementById("result-modal");
+            modal.classList.remove("hidden");
+            setTimeout(() => {
+                modal.classList.remove("opacity-0");
+                document.getElementById("result-modal-box").classList.remove("scale-95");
+            }, 10);
+        }
+
+        function closeResultModal() {
+            const modal = document.getElementById("result-modal");
+            modal.classList.add("opacity-0");
+            document.getElementById("result-modal-box").classList.add("scale-95");
+            setTimeout(() => {
+                modal.classList.add("hidden");
+            }, 300);
+        }
+
+        // Toast Message Notification
+        function showToast(message) {
+            const existing = document.getElementById("app-toast");
+            if (existing) existing.remove();
+
+            const toast = document.createElement("div");
+            toast.id = "app-toast";
+            toast.className = "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 border border-white/20 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs md:text-sm font-medium flex items-center space-x-3 animate-bounce";
+            toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-400"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Password & Admin Modal Handlers
+        function openAdminModal() {
+            if (sessionStorage.getItem("kuji_admin_auth") === "true") {
+                showAdminDashboard();
+            } else {
+                const modal = document.getElementById("password-modal");
+                modal.classList.remove("hidden");
+                setTimeout(() => modal.classList.remove("opacity-0"), 10);
+            }
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById("password-modal");
+            modal.classList.add("opacity-0");
+            setTimeout(() => modal.classList.add("hidden"), 300);
+        }
+
+        async function verifyPassword(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById("password-input").value;
+            const hashedInput = await sha256(inputVal);
+
+            if (inputVal === "days" || hashedInput === PASSWORD_HASH) {
+                sessionStorage.setItem("kuji_admin_auth", "true");
+                closePasswordModal();
+                showAdminDashboard();
+                document.getElementById("password-input").value = "";
+                document.getElementById("password-error").classList.add("hidden");
+            } else {
+                document.getElementById("password-error").classList.remove("hidden");
+            }
+        }
+
+        function showAdminDashboard() {
+            renderAdminItems();
+            document.getElementById("setting-max-draws").value = appState.maxDraws || 3;
+            document.getElementById("setting-dialogue").value = appState.dialogue || "";
+            document.getElementById("setting-title").value = appState.title || "";
+            document.getElementById("setting-bg-color").value = appState.bgColor || "#090d16";
+            document.getElementById("setting-text-color").value = appState.textColor || "#f8fafc";
+            document.getElementById("setting-btn-color").value = appState.btnColor || "#4f46e5";
+            document.getElementById("setting-bg-img").value = appState.bgImg || "";
+            document.getElementById("setting-custom-css").value = appState.customCss || "";
+
+            const modal = document.getElementById("admin-modal");
+            modal.classList.remove("hidden");
+            setTimeout(() => modal.classList.remove("opacity-0"), 10);
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById("admin-modal");
+            modal.classList.add("opacity-0");
+            setTimeout(() => modal.classList.add("hidden"), 300);
+            applyDesign();
+        }
+
+        // Admin Tab Navigation
+        function switchAdminTab(tabName) {
+            ['items', 'rules', 'design'].forEach(t => {
+                document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).classList.remove('border-purple-500', 'text-purple-400');
+                document.getElementById(`tab-btn-${t}`).classList.add('border-transparent', 'text-slate-400');
+            });
+            document.getElementById(`admin-tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabName}`).classList.add('border-purple-500', 'text-purple-400');
+            document.getElementById(`tab-btn-${tabName}`).classList.remove('border-transparent', 'text-slate-400');
+        }
+
+        // Admin Items Rendering & Management
+        function renderAdminItems() {
+            const tbody = document.getElementById("admin-items-tbody");
+            tbody.innerHTML = "";
+            appState.items.forEach((item, index) => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-white/5 transition";
+                tr.innerHTML = `
+                    <td class="p-3 md:p-4">
+                        <input type="text" value="${item.name.replace(/"/g, '&quot;')}" onchange="updateItemName(${index}, this.value)" class="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-white text-xs md:text-sm focus:outline-none focus:border-purple-500">
+                    </td>
+                    <td class="p-3 md:p-4">
+                        <input type="number" min="1" max="100" value="${item.count}" onchange="updateItemCount(${index}, this.value)" class="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-xl text-white text-xs md:text-sm focus:outline-none focus:border-purple-500">
+                    </td>
+                    <td class="p-3 md:p-4 text-right">
+                        <button onclick="deleteItem(${index})" class="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl transition text-xs font-bold">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateItemName(index, val) {
+            if (appState.items[index]) {
+                appState.items[index].name = val;
+            }
+        }
+
+        function updateItemCount(index, val) {
+            let num = parseInt(val, 10);
+            if (isNaN(num) || num < 1) num = 1;
+            if (num > 100) num = 100;
+            if (appState.items[index]) {
+                appState.items[index].count = num;
+            }
+        }
+
+        function addNewItem() {
+            const nameInput = document.getElementById("new-item-name");
+            const countInput = document.getElementById("new-item-count");
+            const name = nameInput.value.trim();
+            const count = parseInt(countInput.value, 10) || 10;
+
+            if (!name) {
+                showToast("アイテム名を入力してください。");
+                return;
+            }
+
+            appState.items.push({
+                id: Date.now(),
+                name: name,
+                count: Math.min(100, Math.max(1, count))
+            });
+
+            nameInput.value = "";
+            countInput.value = "10";
+            renderAdminItems();
+            showToast("新しいアイテムを追加しました。");
+        }
+
+        function deleteItem(index) {
+            appState.items.splice(index, 1);
+            renderAdminItems();
+            showToast("アイテムを削除しました。");
+        }
+
+        // Save All Admin Settings
+        function saveAdminSettings() {
+            appState.maxDraws = parseInt(document.getElementById("setting-max-draws").value, 10) || 3;
+            appState.dialogue = document.getElementById("setting-dialogue").value;
+            appState.title = document.getElementById("setting-title").value || "プレミアムくじ引き";
+            appState.bgColor = document.getElementById("setting-bg-color").value;
+            appState.textColor = document.getElementById("setting-text-color").value;
+            appState.btnColor = document.getElementById("setting-btn-color").value;
+            appState.bgImg = document.getElementById("setting-bg-img").value;
+            appState.customCss = document.getElementById("setting-custom-css").value;
+
+            saveState();
+            applyDesign();
+            showToast("設定を保存し、正常に反映しました。");
+        }
+
+        function manualResetDraws() {
+            const key = getTodayKey();
+            localStorage.setItem(key, 0);
+            updateDrawUI();
+            showToast("本日のクジ引き回数をリセットしました。");
+        }
+
+        // History Modal Handlers
+        function openHistoryModal() {
+            const container = document.getElementById("history-list-container");
+            container.innerHTML = "";
+
+            if (!appState.history || appState.history.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs">当選履歴はまだありません。</div>`;
+            } else {
+                appState.history.forEach((hist, idx) => {
+                    const div = document.createElement("div");
+                    div.className = "flex items-center justify-between p-4 bg-slate-950/60 border border-white/10 rounded-2xl";
+                    div.innerHTML = `
+                        <div>
+                            <span class="text-xs text-amber-400 font-bold block mb-0.5">${hist.date}</span>
+                            <span class="text-sm font-bold text-white">${hist.name}</span>
+                        </div>
+                        <button onclick="addItemFromHistory(${idx})" class="px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-xs font-bold rounded-xl transition flex items-center space-x-1.5" title="履歴からアイテムリストに追加">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>アイテムに追加</span>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            const modal = document.getElementById("history-modal");
+            modal.classList.remove("hidden");
+            setTimeout(() => modal.classList.remove("opacity-0"), 10);
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById("history-modal");
+            modal.classList.add("opacity-0");
+            setTimeout(() => modal.classList.add("hidden"), 300);
+        }
+
+        function addItemFromHistory(historyIndex) {
+            const item = appState.history[historyIndex];
+            if (!item) return;
+            
+            appState.items.push({
+                id: Date.now(),
+                name: item.name,
+                count: 10
+            });
+            saveState();
+            showToast(`「${item.name}」をアイテムリストに追加しました (初期個数:10)。`);
+            openHistoryModal();
+        }
+
+        // Initialization on Load
+        window.onload = function() {
+            loadState();
+            applyDesign();
+        };
+    </script>
+</body>
+</html>
